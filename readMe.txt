@@ -1,3 +1,6 @@
+This program takes input in the form of "node1","node2" on each line. When executing, two nodes are chosen.
+The program returns "yes" if they are part of the same connected component, and "no" if they are not. Each edge is assumed to be bi-directional.
+
 Dependencies to build and run: java 7, ant
 To run first use these ant commands: 'ant compile jar'
 To execute type in: 'java -jar ./build/jar/connectedCities.jar input.txt cityA cityB'
