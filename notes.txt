@@ -1,0 +1,37 @@
+Features: 
+-high throughput/handles large amounts of data (tests @ 25GB on a laptop)
+-1 edge processed per 0.001145772 ms in experiment
+-reads just enough data to get a correct solution
+-multi threaded via union find
+-O(n(Log*n)) time complexity, where the asterisk means star and not multiply, and n is edges
+-Space complexity is linear to unique cities and is less than that of the edges. This is why the 25.1 GB file could be processed.
+
+Algorithmic Approach 
+
+The connected cities problem can be solved with a straight forward BFS or DFS search. BFS and DFS are not ideal for parallelization since they work from 1 single connected component and expand from there. 
+
+What if you can expand each edge into a component as it is read? Then when your two desired cities are part of the same component, no more data needs to be read. This is the heart of the Union-Find data structure, which is used here.
+
+Union Find creation is known to be of O(n(Log*n)) time complexity, where the asterisk means star and not multiply. Space complexity is linear. It is a slow growing function that converges to 5 for some absurdly large numbers. Path compression is also used as a further optimization.
+
+Parallelization 
+
+Each thread is ordered, which is needed for deconflicting. Parallelization is achieved by assigning each edge, round robin style, to each process. If a thread cannot obtain needed locks, it throws the data back into the queue. That way contention is handled by deferring execution with the a low penalty of a constant time amount of work.
+
+Experimental data shows that file I/O (on a SSD) is slower than the data is handled in the Union Find data structure. This proves a near linear run time since file read is linear.
+
+Furthermore when the two queried cities end up being connected, all threads terminate, data stops being read, and the answer is returned.
+
+The heap being blown (for large input) is avoided by streaming the data rather than reading it all in then processing.
+
+Experimental data
+
+Corrects on small data sets: Passed < 1ms
+Correctness on large data set (25.1 GB) with just-in-time correctness (correct data at top): Passed < 1ms
+
+Time to compute all 25.1 GB input with 500,000,000 edges (25.1 GB space for edges) and 500,000 cities (cities are 128 MB of space)
+	File read i/o time: 572879 ms
+	Total execution time: 572886  
+	Execution time post file/io: 7 ms (this indicates, that file/io is the bottle neck)
+	Total time 9 minutes 32.89 seconds
+	Edges handled per milli second = 872.77 (this might be faster without file i/o since file i/o is the bottle neck)
